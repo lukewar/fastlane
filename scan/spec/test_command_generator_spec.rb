@@ -33,7 +33,7 @@ describe Scan do
                                      "-scheme 'app'",
                                      "-project './examples/standard/app.xcodeproj'",
                                      "-sdk '9.0'",
-                                     "-destination '#{Scan.config[:destination]}'",
+                                     "-destination '#{Scan.config[:destinations].first}'",
                                      "DEBUG=1 BUNDLE_NAME=Example\\ App",
                                      :build,
                                      :test
@@ -46,6 +46,23 @@ describe Scan do
 
       result = Scan::TestCommandGenerator.generate
       expect(result.last).to include(" | xcpretty -f `custom-formatter`")
+    end
+
+    it "supports multiple destination devices" do
+      options = { project: "./examples/standard/app.xcodeproj", devices: ["iPhone 6", "iPad Pro"] }
+      Scan.config = FastlaneCore::Configuration.create(Scan::Options.available_options, options)
+
+      result = Scan::TestCommandGenerator.generate
+      expect(result).to start_with([
+                                     "set -o pipefail &&",
+                                     "env NSUnbufferedIO=YES xcodebuild",
+                                     "-scheme 'app'",
+                                     "-project './examples/standard/app.xcodeproj'",
+                                     "-destination '#{Scan.config[:destinations].first}'",
+                                     "-destination '#{Scan.config[:destinations].last}'",
+                                     :build,
+                                     :test
+                                   ])
     end
 
     describe "Standard Example" do
@@ -63,7 +80,7 @@ describe Scan do
                                        "env NSUnbufferedIO=YES xcodebuild",
                                        "-scheme 'app'",
                                        "-project './examples/standard/app.xcodeproj'",
-                                       "-destination '#{Scan.config[:destination]}'",
+                                       "-destination '#{Scan.config[:destinations].first}'",
                                        :build,
                                        :test
                                      ])
@@ -108,7 +125,7 @@ describe Scan do
                                        "env NSUnbufferedIO=YES xcodebuild",
                                        "-scheme 'app'",
                                        "-project './examples/standard/app.xcodeproj'",
-                                       "-destination '#{Scan.config[:destination]}'",
+                                       "-destination '#{Scan.config[:destinations].first}'",
                                        "-derivedDataPath '/tmp/my/derived_data'",
                                        :build,
                                        :test
@@ -129,7 +146,7 @@ describe Scan do
                                        "env NSUnbufferedIO=YES xcodebuild",
                                        "-scheme 'app'",
                                        "-project './examples/standard/app.xcodeproj'",
-                                       "-destination '#{Scan.config[:destination]}'",
+                                       "-destination '#{Scan.config[:destinations].first}'",
                                        "-resultBundlePath './fastlane/test_output/app.test_result'",
                                        :build,
                                        :test
